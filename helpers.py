@@ -1,6 +1,6 @@
 import math
 
-# activation functions
+# activation functions 
 
 def logistic(x):
     return 1/(1 + math.exp(-x))

@@ -44,13 +44,18 @@ class BasicNet:
             act.append(np.array(list(map(self.act_fct,net[l]))))
         return net, act
 
-    def backpropagate_errors(self, net, act, target):
+    def backpropagate_errors(self, net, act, target, loss):
 
         errors = [np.array([])]*self.num_of_layers
-        errors[self.num_of_layers - 1] = (act[self.num_of_layers - 1] - target) \
-                                        * np.array(list(map(self.act_fct_prime, \
-                                        net[self.num_of_layers - 1])))
-#       for l in range(self.num_of_layers - 2, 0, -1):
+
+        if loss == 'crossentropy':
+            p = - target / act[-1]
+        elif loss == 'mse':
+            p = (act[-1] - target)/self.neurons[-1]
+        else: 
+            raise ValueError(f"unknown loss function: {loss}")
+
+        errors[-1] = p * np.array(list(map(self.act_fct_prime, net[-1])))
         for l in reversed(self.layers[:-1]):
             errors[l] = np.array([np.dot(errors[l+1], self.weights_from_neuron(l,k)) \
                                     *self.act_fct_prime(net[l][k]) \
