@@ -16,20 +16,32 @@ class ScalarVariable:
 
 
 class Vector:
-    def __init__(self, dimension):
+    def __init__(self, dimension, function_vector = False):
         self.dimension = dimension
         self.variables = [ScalarVariable(0) for i in range(dimension)]
+        self.function_vector = False
 
     def set_value(self, value_list):
-        for i, value in enumerate(value_list):
-            self.variables[i].set_value(value)
+        if self.function_vector:
+            print("can't set values of function vector")
+        else:
+            for i, value in enumerate(value_list):
+                self.variables[i].set_value(value)
 
     def get_value(self):
         return [var.get_value() for var in self.variables]
 
     def initialize(self):
-        value_list = np.random.rand(self.dimension)
-        self.set_value(value_list)
+        if self.function_vector:
+            print("can't initialize function vector")
+        else:
+            value_list = np.random.rand(self.dimension)
+            self.set_value(value_list)
+
+    def set_functions(self, function_list):
+        self.variables = function_list
+        self.function_vector = True
+
 
 class Function:
     def __init__(self, operator, children):
