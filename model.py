@@ -152,13 +152,52 @@ class DenseLayer(Model):
 
 class MultiLayerPerceptron(Model):
         def __init__(self, input_dim, middle_dim, num_mid_mid_layers, output_dim, activation_fct):
-        self.input_dim = input_dim
-        self.middle_dim = middle_dim
-        self.num_mid_mid_layers = num_mid_mid_layers
-        self.output_dim = output_dim
-        self.activation_fct = activation_fct
-        self.layers = []
-        self.layers.append(DenseLayer(input_dim, middle_dim, activation_fct))
-        for i in range(num_mid_mid_layers):
-            self.layers.append(DenseLayer(middle_dim, middle_dim, activation_fct))
-        self.layers.append(DenseLayer(middle_dim, output_dim, activation_fct))
+            self.input_dim = input_dim
+            self.middle_dim = middle_dim
+            self.num_mid_mid_layers = num_mid_mid_layers
+            self.output_dim = output_dim
+            self.activation_fct = activation_fct
+            self.layers = []
+            self.layers.append(DenseLayer(input_dim, middle_dim, activation_fct))
+            for _ in range(num_mid_mid_layers):
+                self.layers.append(DenseLayer(middle_dim, middle_dim, activation_fct))
+            self.layers.append(DenseLayer(middle_dim, output_dim, activation_fct))
+
+        def get_model_fcts(self):
+            for i in range(1, len(self.layers), 1):
+                prev_output = self.layers[i-1].get_model_fcts()
+                self.layers[i].set_functions_as_input(prev_output)
+            return self.layers[-1].get_model_fcts()
+
+        def get_parameters_as_list(self):
+            params = []
+            for layer in self.layers:
+                params += layer.get_parameters_as_list()
+            return params
+
+        def get_parameter_values_as_list(self):
+            return [p.get_value() for p in self.get_parameters_as_list()]
+
+        def initialize(self):
+            for layer in self.layers:
+                layer.initialize()
+
+        def set_functions_as_input(self, function_list):
+            self.layers[0].set_functions_as_input(function_list)
+
+        def set_input(self, value_list):
+            self.layers[0].set_input(value_list)
+
+        def set_parameters_from_list(self, value_list):
+            index = (self.input_dim + 1)*self.middle_dim
+            self.layers[0].set_parameters_from_list(value_list[:index])
+            value_list = value_list[index:]
+            mid_index = (self.middle_dim + 1)*self.middle_dim
+            for i in range(self.num_mid_mid_layers):
+                self.layers[1+i].set_parameters_from_list(value_list[i*mid_index:(i+1)*mid_index])
+            last_index = (self.middle_dim + 1)*self.output_dim
+            self.layers[-1].set_parameters_from_list(value_list[-last_index:])
+            
+
+        
+
